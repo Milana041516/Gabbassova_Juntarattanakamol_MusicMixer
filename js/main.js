@@ -4,8 +4,24 @@ const dropZones = document.querySelectorAll('.drop-zone');
 const musicalTools = document.querySelectorAll('.m-tools img');
 let selectedInstruments = []; 
 let volSlider = document.querySelector('#volumeControl');
+const rangeSlider = document.getElementById('volumeControl');
+const glassIcon = document.querySelector('.fa-wine-glass');
+const resetButton = document.getElementById('resetButton');
+resetButton.addEventListener('click', resetPositions);
+const originalPositions = Array.from(musicalTools).map(tool => ({
+    tool: tool,
+    parent: tool.parentNode,
+    nextSibling: tool.nextSibling
+}));
+const zimaImages = [
+    'images/zimaLime.png',
+    'images/zimaGrape.png',
+    'images/zimaOrange.png',
+    'images/zimaOriginal.png',
+    'images/zimaStrawberry.png'
+];
 
-// Event listener for buttons
+
 for (let i = 0; i < btn.length; i++) {
     btn[i].addEventListener('click', function(e) {
         btn[i].classList.toggle('button-clicked');
@@ -20,16 +36,9 @@ for (let i = 0; i < resetbtn.length; i++) {
     });
 }
 
-const originalPositions = Array.from(musicalTools).map(tool => ({
-    tool: tool,
-    parent: tool.parentNode,
-    nextSibling: tool.nextSibling
-}));
 
 
-// Event listener for reset button
-const resetButton = document.getElementById('resetButton');
-resetButton.addEventListener('click', resetPositions);
+
 
 function resetPositions() {
     console.log('this page has been refreshed')
@@ -39,8 +48,6 @@ function resetPositions() {
 
 
 
-
-// Drag and drop functionality
 function dragStart() {
     console.log('started dragging this piece:', this);
     draggedTool = this;
@@ -54,16 +61,6 @@ function dragOver(e) {
     console.log('dragged over me');
 }
 
-// Array of possible Zima bottle images
-const zimaImages = [
-    'images/zimaLime.png',
-    'images/zimaGrape.png',
-    'images/zimaOrange.png',
-    'images/zimaOriginal.png',
-    'images/zimaStrawberry.png'
-];
-
-// Function to add the image to the div with class name "bottle-background"
 function displayRandomZima() {
     const randomIndex = Math.floor(Math.random() * zimaImages.length);
     const randomImageUrl = zimaImages[randomIndex];
@@ -77,7 +74,6 @@ function displayRandomZima() {
     }, 100);
 }
 
-// Function to handle the drop event
 function drop(e) {
     e.preventDefault();
     console.log('dropped something on me');
@@ -99,14 +95,7 @@ function drop(e) {
 
 
 
-musicalTools.forEach(tool => tool.addEventListener("dragstart", dragStart));
 
-dropZones.forEach(zone => {
-    zone.addEventListener("dragover", dragOver);
-    zone.addEventListener("drop", drop);
-});
-
-// Play audio function
 function playAudio(selectedInstrument, selectedDropzone) {
     if (selectedDropzone.childElementCount === 1) {
         const instrument = new Audio(`audio/${selectedInstrument}.wav`);
@@ -114,8 +103,28 @@ function playAudio(selectedInstrument, selectedDropzone) {
         instrument.play();
         selectedDropzone.appendChild(instrument);
         selectedInstruments.push(instrument); 
+        synchronizeAudio();
     }
 }
+
+function synchronizeAudio() {
+    let maxDuration = 0;
+    dropZones.forEach(zone => {
+        zone.querySelectorAll('audio').forEach(audio => {
+            if (audio.duration > maxDuration) {
+                maxDuration = audio.duration;
+            }
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.querySelectorAll('audio').forEach(audio => {
+            audio.currentTime = maxDuration;
+        });
+    });
+}
+
+
 
 function pauseAudio() {
     selectedInstruments.forEach(instrument => {
@@ -131,8 +140,6 @@ function stopAllAudio() {
 }
 
 
-
-// Event listeners for play, pause, rewind buttons
 playButton.addEventListener('click', function() {
     selectedInstruments.forEach(instrument => {
         instrument.play();
@@ -164,9 +171,7 @@ volSlider.addEventListener('input', function() {
     });
 });
 
-//volumeControl connected to the filling glass
-const rangeSlider = document.getElementById('volumeControl');
-const glassIcon = document.querySelector('.fa-wine-glass');
+
 
 rangeSlider.addEventListener('input', function() {
     const value = rangeSlider.value;
@@ -177,3 +182,11 @@ rangeSlider.addEventListener('input', function() {
 });
 
 
+window.addEventListener('load', synchronizeAudio);
+
+musicalTools.forEach(tool => tool.addEventListener("dragstart", dragStart));
+
+dropZones.forEach(zone => {
+    zone.addEventListener("dragover", dragOver);
+    zone.addEventListener("drop", drop);
+});
